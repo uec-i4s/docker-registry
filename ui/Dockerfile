@@ -7,14 +7,13 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production stage: Nginx + Node.js + Docker CLI
-FROM nginx:stable-alpine
+# Production stage: Node.js + Docker CLI
+FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/build ./build
 COPY --from=build /app/server.js ./
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY certs /etc/nginx/certs
-EXPOSE 443
-CMD ["nginx", "-g", "daemon off;"]
+RUN apk add --no-cache docker-cli
+EXPOSE 3000
+CMD ["npm", "start"]
