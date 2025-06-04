@@ -32,96 +32,98 @@
   </div>
 
   <script>
-    const registryUrl = window.location.origin;
-    async function loadCatalog() {
-      try {
-        const res = await fetch(`/v2/_catalog`);
-        const data = await res.json();
-        const ul = document.getElementById('repos');
-        ul.innerHTML = '';
-        if (data.repositories.length === 0) {
-          ul.innerHTML = '<li>リポジトリがありません</li>';
+    window.addEventListener('DOMContentLoaded', () => {
+      const registryUrl = window.location.origin;
+      async function loadCatalog() {
+        try {
+          const res = await fetch(`/v2/_catalog`);
+          const data = await res.json();
+          const ul = document.getElementById('repos');
+          ul.innerHTML = '';
+          if (data.repositories.length === 0) {
+            ul.innerHTML = '<li>リポジトリがありません</li>';
+            return;
+          }
+          data.repositories.forEach(repo => {
+            const li = document.createElement('li');
+            li.innerHTML = `<b>${repo}</b> <button data-repo="${repo}">pullコマンド</button>`;
+            ul.appendChild(li);
+          });
+          // ボタンにpullコマンド生成イベント
+          ul.querySelectorAll('button[data-repo]').forEach(btn => {
+            btn.addEventListener('click', e => {
+              const repo = btn.getAttribute('data-repo');
+              document.getElementById('repoInput').value = repo + ':latest';
+              genPullCmd();
+            });
+          });
+        } catch (err) {
+          document.getElementById('repos').innerHTML =
+            '<li>一覧取得エラー</li>';
+          console.error(err);
+        }
+      }
+
+      function genPullCmd() {
+        const repo = document.getElementById('repoInput').value.trim();
+        if (!repo) {
+          document.getElementById('pullCmd').textContent = '';
           return;
         }
-        data.repositories.forEach(repo => {
-          const li = document.createElement('li');
-          li.innerHTML = `<b>${repo}</b> <button data-repo="${repo}">pullコマンド</button>`;
-          ul.appendChild(li);
-        });
-        // ボタンにpullコマンド生成イベント
-        ul.querySelectorAll('button[data-repo]').forEach(btn => {
-          btn.addEventListener('click', e => {
-            const repo = btn.getAttribute('data-repo');
-            document.getElementById('repoInput').value = repo + ':latest';
-            genPullCmd();
-          });
-        });
-      } catch (err) {
-        document.getElementById('repos').innerHTML =
-          '<li>一覧取得エラー</li>';
-        console.error(err);
+        const url = window.location.host;
+        document.getElementById('pullCmd').textContent =
+          `docker pull ${url}/${repo}`;
       }
-    }
 
-    function genPullCmd() {
-      const repo = document.getElementById('repoInput').value.trim();
-      if (!repo) {
-        document.getElementById('pullCmd').textContent = '';
-        return;
-      }
-      const url = window.location.host;
-      document.getElementById('pullCmd').textContent =
-        `docker pull ${url}/${repo}`;
-    }
-
-    function genPushCmd() {
-      const src = document.getElementById('srcImage').value.trim();
-      if (!src) {
-        document.getElementById('pushCmd').textContent = '';
-        return;
-      }
-      const url = window.location.host;
-      document.getElementById('pushCmd').textContent =
-        `docker pull ${src}\ndocker tag ${src} ${url}/${src}\ndocker push ${url}/${src}`;
-    }
-
-    async function doPush() {
-      const src = document.getElementById('srcImage').value.trim();
-      if (!src) {
-        document.getElementById('pushStatus').textContent = 'イメージ名を入力してください';
-        return;
-      }
-      document.getElementById('pushStatus').textContent = '追加中...';
-      try {
-        const res = await fetch('http://localhost:3001/api/push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: src })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('pushStatus').textContent = '追加成功';
-        } else {
-          document.getElementById('pushStatus').textContent = '追加失敗: ' + (data.error || '不明なエラー');
+      function genPushCmd() {
+        const src = document.getElementById('srcImage').value.trim();
+        if (!src) {
+          document.getElementById('pushCmd').textContent = '';
+          return;
         }
-      } catch (e) {
-        document.getElementById('pushStatus').textContent = 'API通信エラー';
+        const url = window.location.host;
+        document.getElementById('pushCmd').textContent =
+          `docker pull ${src}\ndocker tag ${src} ${url}/${src}\ndocker push ${url}/${src}`;
       }
-    }
 
-    document.getElementById('refresh')
-      .addEventListener('click', loadCatalog);
+      async function doPush() {
+        const src = document.getElementById('srcImage').value.trim();
+        if (!src) {
+          document.getElementById('pushStatus').textContent = 'イメージ名を入力してください';
+          return;
+        }
+        document.getElementById('pushStatus').textContent = '追加中...';
+        try {
+          const res = await fetch('http://localhost:3001/api/push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: src })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            document.getElementById('pushStatus').textContent = '追加成功';
+          } else {
+            document.getElementById('pushStatus').textContent = '追加失敗: ' + (data.error || '不明なエラー');
+          }
+        } catch (e) {
+          document.getElementById('pushStatus').textContent = 'API通信エラー';
+        }
+      }
 
-    document.getElementById('genPull')
-      .addEventListener('click', genPullCmd);
+      document.getElementById('refresh')
+        .addEventListener('click', loadCatalog);
 
-    document.getElementById('genPush')
-      .addEventListener('click', genPushCmd);
+      document.getElementById('genPull')
+        .addEventListener('click', genPullCmd);
 
-    document.getElementById('doPush')
-      .addEventListener('click', doPush);
+      document.getElementById('genPush')
+        .addEventListener('click', genPushCmd);
 
-    loadCatalog();
+      document.getElementById('doPush')
+        .addEventListener('click', doPush);
+
+      loadCatalog();
+    });
   </script>
 </body>
 </html>
