@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 function RepoList({ onPull }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tags, setTags] = useState({});
+  const [selected, setSelected] = useState({});
 
   const fetchCatalog = async () => {
     setLoading(true);
@@ -10,6 +12,12 @@ function RepoList({ onPull }) {
       const res = await fetch("/v2/_catalog");
       const data = await res.json();
       setRepos(data.repositories || []);
+      // 各リポジトリのタグ一覧も取得
+      for (const repo of data.repositories || []) {
+        const tagRes = await fetch(`/v2/${repo}/tags/list`);
+        const tagData = await tagRes.json();
+        setTags((prev) => ({ ...prev, [repo]: tagData.tags || [] }));
+      }
     } catch {
       setRepos([]);
     }
@@ -19,6 +27,16 @@ function RepoList({ onPull }) {
   useEffect(() => {
     fetchCatalog();
   }, []);
+
+  const handleSelect = (repo, tag) => {
+    setSelected((prev) => ({ ...prev, [repo]: tag }));
+  };
+
+  const handleDelete = async (repo, tag) => {
+    // レジストリAPIの仕様上、イメージ削除はmanifest digestが必要
+    // ここではUIのみ実装例（API側でdigest取得→DELETE実装が必要）
+    alert("削除機能はAPI実装が必要です（/v2/<name>/manifests/<digest> へのDELETE）");
+  };
 
   return (
     <section>
@@ -32,8 +50,47 @@ function RepoList({ onPull }) {
         <ul>
           {repos.map((repo) => (
             <li key={repo}>
-              <b>{repo}</b>{" "}
-              <button onClick={() => onPull(repo)}>pullコマンド</button>
+              <b>{repo}</b>
+              {tags[repo] && tags[repo].length > 0 ? (
+                <>
+                  <select
+                    value={selected[repo] || tags[repo][0]}
+                    onChange={e => handleSelect(repo, e.target.value)}
+                  >
+                    {tags[repo].map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      const tag = selected[repo] || tags[repo][0];
+                      onPull(`${repo}:${tag}`);
+                    }}
+                  >
+                    pullコマンド
+                  </button>
+                  <button
+                    style={{marginLeft:"0.5em"}}
+                    onClick={() => {
+                      const tag = selected[repo] || tags[repo][0];
+                      handleDelete(repo, tag);
+                    }}
+                  >
+                    削除
+                  </button>
+                  <button
+                    style={{marginLeft:"0.5em"}}
+                    onClick={() => {
+                      const tag = selected[repo] || tags[repo][0];
+                      navigator.clipboard.writeText(`${window.location.host}/${repo}:${tag}`);
+                    }}
+                  >
+                    コピー
+                  </button>
+                </>
+              ) : (
+                <span>タグなし</span>
+              )}
             </li>
           ))}
         </ul>
@@ -94,7 +151,7 @@ function PullCmd({ repo }) {
   const [cmd, setCmd] = useState("");
   useEffect(() => {
     if (repo) {
-      setCmd(`docker pull ${window.location.host}/${repo}:latest`);
+      setCmd(`docker pull ${window.location.host}/${repo}`);
     } else {
       setCmd("");
     }
@@ -103,6 +160,17 @@ function PullCmd({ repo }) {
     <section>
       <h2>docker pull コマンド</h2>
       <pre>{cmd}</pre>
+      <button onClick={() => navigator.clipboard.writeText(cmd)}>コピー</button>
+      <div style={{marginTop:"0.5em",fontSize:"0.95em"}}>
+        <b>FROMで使う:</b>
+        <input
+          style={{width:"80%"}}
+          value={`${window.location.host}/${repo || ""}`}
+          readOnly
+          onFocus={e => e.target.select()}
+        />
+        <button onClick={() => navigator.clipboard.writeText(`${window.location.host}/${repo || ""}`)}>コピー</button>
+      </div>
     </section>
   );
 }
