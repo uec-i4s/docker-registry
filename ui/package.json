@@ -1,0 +1,17 @@
+{
+  "name": "registry-ui",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve -s build",
+    "build": "npx vite build",
+    "dev": "npx vite"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
