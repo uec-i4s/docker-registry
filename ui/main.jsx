@@ -76,6 +76,14 @@ function RepoList({ onPull, refreshTrigger }) {
                     ))}
                   </select>
                   <button
+                    onClick={() => {
+                      const tag = selected[repo] || tags[repo][0];
+                      handleSelect(repo, tag);
+                    }}
+                  >
+                    選択
+                  </button>
+                  <button
                     style={{marginLeft:"0.5em"}}
                     onClick={() => {
                       const tag = selected[repo] || tags[repo][0];
