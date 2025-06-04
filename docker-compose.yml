@@ -8,6 +8,7 @@ services:
       REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: '["*"]'
       REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '["GET","OPTIONS"]'
       REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '["Authorization","Content-Type"]'
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     ports:
       - "5000:5000"
     volumes:
