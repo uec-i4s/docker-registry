@@ -15,5 +15,6 @@ COPY --from=build /app/server.js ./
 COPY --from=build /app/package.json ./
 RUN apk add --no-cache nodejs npm
 RUN npm install --omit=dev
+RUN npm install http-proxy-middleware
 EXPOSE 3000
 CMD ["npm", "start"]
