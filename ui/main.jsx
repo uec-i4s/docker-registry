@@ -1,6 +1,76 @@
 import React, { useState, useEffect } from "react";
 import "./style.css";
 
+// ロゴ表示コンポーネント
+const ContainerLogo = ({ repoName, className = "w-10 h-10" }) => {
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    const fetchLogo = async () => {
+      setIsLoading(true);
+      setHasError(false);
+      
+      try {
+        const response = await fetch(`/api/logo/${repoName}`);
+        const data = await response.json();
+        
+        if (data.logoUrl) {
+          setLogoUrl(data.logoUrl);
+        } else {
+          setHasError(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch logo:', error);
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (repoName) {
+      fetchLogo();
+    }
+  }, [repoName]);
+  
+  const handleImageError = () => {
+    setHasError(true);
+  };
+  
+  if (isLoading) {
+    // ローディング状態
+    return (
+      <div className={`${className} bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center border border-gray-200`}>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
+  if (hasError || !logoUrl) {
+    // フォールバック: SVGアイコン
+    return (
+      <div className={`${className} bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center border border-blue-200`}>
+        <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13.5 3a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 3a3 3 0 11-6 0 3 3 0 016 0zm6 4.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm1.5 0a3 3 0 11-6 0 3 3 0 016 0zm-9 6a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm1.5 0a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+    );
+  }
+  
+  return (
+    <div className={`${className} bg-white rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden`}>
+      <img
+        src={logoUrl}
+        alt={`${repoName} logo`}
+        className="w-full h-full object-contain p-1"
+        onError={handleImageError}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 function RepoList({ onPull, refreshTrigger }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,11 +155,7 @@ function RepoList({ onPull, refreshTrigger }) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M13.5 3a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 3a3 3 0 11-6 0 3 3 0 016 0zm6 4.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm1.5 0a3 3 0 11-6 0 3 3 0 016 0zm-9 6a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm1.5 0a3 3 0 11-6 0 3 3 0 016 0z"/>
-                          </svg>
-                        </div>
+                        <ContainerLogo repoName={repo} className="w-12 h-12" />
                       </div>
                       
                       <div className="flex-1 min-w-0">

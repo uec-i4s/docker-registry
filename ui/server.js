@@ -205,6 +205,78 @@ app.post("/api/push", (req, res) => {
   });
 });
 
+// API: リポジトリのロゴ取得
+app.get("/api/logo/:repo", async (req, res) => {
+  const { repo } = req.params;
+  
+  try {
+    // まずDocker Hub APIでリポジトリ情報を取得
+    const hubResponse = await fetch(`https://hub.docker.com/v2/repositories/library/${repo}/`);
+    if (hubResponse.ok) {
+      const hubData = await hubResponse.json();
+      if (hubData.logo_url) {
+        return res.json({ logoUrl: hubData.logo_url });
+      }
+    }
+    
+    // Docker Hub公式ライブラリのロゴを試す
+    const officialLogos = {
+      'nginx': 'https://raw.githubusercontent.com/docker-library/docs/master/nginx/logo.png',
+      'node': 'https://raw.githubusercontent.com/docker-library/docs/master/node/logo.png',
+      'python': 'https://raw.githubusercontent.com/docker-library/docs/master/python/logo.png',
+      'redis': 'https://raw.githubusercontent.com/docker-library/docs/master/redis/logo.png',
+      'mysql': 'https://raw.githubusercontent.com/docker-library/docs/master/mysql/logo.png',
+      'postgres': 'https://raw.githubusercontent.com/docker-library/docs/master/postgres/logo.png',
+      'mongo': 'https://raw.githubusercontent.com/docker-library/docs/master/mongo/logo.png',
+      'alpine': 'https://raw.githubusercontent.com/docker-library/docs/master/alpine/logo.png',
+      'ubuntu': 'https://raw.githubusercontent.com/docker-library/docs/master/ubuntu/logo.png',
+      'debian': 'https://raw.githubusercontent.com/docker-library/docs/master/debian/logo.png',
+      'golang': 'https://raw.githubusercontent.com/docker-library/docs/master/golang/logo.png',
+      'openjdk': 'https://raw.githubusercontent.com/docker-library/docs/master/openjdk/logo.png',
+      'rabbitmq': 'https://raw.githubusercontent.com/docker-library/docs/master/rabbitmq/logo.png',
+      'memcached': 'https://raw.githubusercontent.com/docker-library/docs/master/memcached/logo.png',
+      'wordpress': 'https://raw.githubusercontent.com/docker-library/docs/master/wordpress/logo.png'
+    };
+    
+    // リポジトリ名から最適なロゴURLを検索
+    const lowerRepo = repo.toLowerCase();
+    for (const [key, url] of Object.entries(officialLogos)) {
+      if (lowerRepo.includes(key)) {
+        // URLが実際に存在するかチェック
+        try {
+          const logoResponse = await fetch(url, { method: 'HEAD' });
+          if (logoResponse.ok) {
+            return res.json({ logoUrl: url });
+          }
+        } catch (e) {
+          // ロゴが見つからない場合は続行
+        }
+      }
+    }
+    
+    // GitHub上のプロジェクトロゴを検索
+    const githubSearchUrl = `https://api.github.com/search/repositories?q=${repo}+in:name&sort=stars&order=desc&per_page=1`;
+    const githubResponse = await fetch(githubSearchUrl);
+    if (githubResponse.ok) {
+      const githubData = await githubResponse.json();
+      if (githubData.items && githubData.items.length > 0) {
+        const topRepo = githubData.items[0];
+        // GitHubリポジトリのアバターを使用
+        if (topRepo.owner && topRepo.owner.avatar_url) {
+          return res.json({ logoUrl: topRepo.owner.avatar_url });
+        }
+      }
+    }
+    
+    // フォールバック: デフォルトアイコン
+    res.json({ logoUrl: null });
+    
+  } catch (error) {
+    console.error('Logo fetch error:', error);
+    res.json({ logoUrl: null });
+  }
+});
+
 // 静的ファイル配信（Reactビルド成果物）
 app.use(express.static(path.join(__dirname, "build")));
 
