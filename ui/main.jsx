@@ -117,15 +117,18 @@ function PushForm() {
   const [src, setSrc] = useState("");
   const [status, setStatus] = useState("");
   const [cmd, setCmd] = useState("");
+  const [logs, setLogs] = useState([]);
 
   const doPush = async () => {
     if (!src) {
       setStatus("イメージ名を入力してください");
       setCmd("");
+      setLogs([]);
       return;
     }
     setStatus("追加中...");
     setCmd("");
+    setLogs([]);
     try {
       const res = await fetch("/api/push", {
         method: "POST",
@@ -136,13 +139,16 @@ function PushForm() {
       if (res.ok) {
         setStatus("追加成功");
         setCmd(data.log || "");
+        setLogs(data.logs || []);
       } else {
         setStatus("追加失敗: " + (data.error || "不明なエラー"));
         setCmd(data.detail || "");
+        setLogs(data.logs || []);
       }
-    } catch {
-      setStatus("API通信エラー");
+    } catch (e) {
+      setStatus("API通信エラー: " + e.message);
       setCmd("");
+      setLogs([]);
     }
   };
 
@@ -156,7 +162,40 @@ function PushForm() {
       />
       <button onClick={doPush}>レジストリに追加</button>
       <span>{status}</span>
-      <pre style={{background:"#eee",padding:"0.5em",fontSize:"0.9em",overflowX:"auto"}}>{cmd}</pre>
+      
+      {logs.length > 0 && (
+        <div>
+          <h3>実行ログ:</h3>
+          <pre style={{
+            background:"#f5f5f5",
+            padding:"1em",
+            fontSize:"0.8em",
+            overflowX:"auto",
+            maxHeight:"300px",
+            overflowY:"auto",
+            border:"1px solid #ddd",
+            borderRadius:"4px"
+          }}>
+            {logs.join('\n')}
+          </pre>
+        </div>
+      )}
+      
+      {cmd && (
+        <div>
+          <h3>Docker出力:</h3>
+          <pre style={{
+            background:"#eee",
+            padding:"0.5em",
+            fontSize:"0.9em",
+            overflowX:"auto",
+            maxHeight:"200px",
+            overflowY:"auto"
+          }}>
+            {cmd}
+          </pre>
+        </div>
+      )}
     </section>
   );
 }
