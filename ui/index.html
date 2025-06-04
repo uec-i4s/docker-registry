@@ -16,6 +16,13 @@
   <button id="refresh">一覧を更新</button>
   <ul id="repos"></ul>
 
+  <h2>docker pull コマンド生成</h2>
+  <div>
+    <input id="repoInput" type="text" placeholder="例: ubuntu:latest" />
+    <button id="genPull">コマンド生成</button>
+    <pre id="pullCmd"></pre>
+  </div>
+
   <script>
     const registryUrl = window.location.origin;
     async function loadCatalog() {
@@ -30,8 +37,16 @@
         }
         data.repositories.forEach(repo => {
           const li = document.createElement('li');
-          li.textContent = repo;
+          li.innerHTML = `<b>${repo}</b> <button data-repo="${repo}">pullコマンド</button>`;
           ul.appendChild(li);
+        });
+        // ボタンにpullコマンド生成イベント
+        ul.querySelectorAll('button[data-repo]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const repo = btn.getAttribute('data-repo');
+            document.getElementById('repoInput').value = repo + ':latest';
+            genPullCmd();
+          });
         });
       } catch (err) {
         document.getElementById('repos').innerHTML =
@@ -40,8 +55,22 @@
       }
     }
 
+    function genPullCmd() {
+      const repo = document.getElementById('repoInput').value.trim();
+      if (!repo) {
+        document.getElementById('pullCmd').textContent = '';
+        return;
+      }
+      const url = window.location.host;
+      document.getElementById('pullCmd').textContent =
+        `docker pull ${url}/${repo}`;
+    }
+
     document.getElementById('refresh')
       .addEventListener('click', loadCatalog);
+
+    document.getElementById('genPull')
+      .addEventListener('click', genPullCmd);
 
     loadCatalog();
   </script>
