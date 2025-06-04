@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  # Docker Registry 本体
+  registry:
+    image: registry:2            # Docker 公式 registry イメージ
+    container_name: registry     # コンテナ名を固定
+    restart: always              # 万が一落ちても自動再起動
+    volumes:
+      - ./data:/var/lib/registry # レジストリデータを永続化
+    networks:
+      - registry-net
+
+  # nginx リバースプロキシ
+  nginx:
+    image: nginx:stable-alpine   # nginx の軽量イメージ
+    container_name: registry-nginx
+    restart: always
+    ports:
+      - "80:80"                  # ホスト側の 80 番をコンテナの 80 番にマッピング
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /var/log/nginx-registry:/var/log/nginx  # nginx のログを外に出したい場合
+    depends_on:
+      - registry                # registry が先に起動してから nginx を起動
+    networks:
+      - registry-net
+
+networks:
+  registry-net:
+    driver: bridge
