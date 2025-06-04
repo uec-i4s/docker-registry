@@ -85,11 +85,14 @@ function RepoList({ onPull, refreshTrigger }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 px-2 py-1 bg-base-300 rounded border">
-                          <span className="text-sm font-mono font-bold">{repo}</span>
+                          <span className="text-sm font-mono font-bold">{`${repo}:${selected[repo] || (tags[repo] && tags[repo][0]) || 'latest'}`}</span>
                           <button
                             className="btn btn-ghost btn-xs"
-                            onClick={() => navigator.clipboard.writeText(repo)}
-                            title="リポジトリ名をコピー"
+                            onClick={() => {
+                              const tag = selected[repo] || (tags[repo] && tags[repo][0]) || 'latest';
+                              navigator.clipboard.writeText(`${repo}:${tag}`);
+                            }}
+                            title="イメージ:タグをコピー"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
