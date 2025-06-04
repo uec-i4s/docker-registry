@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-function RepoList({ onPull }) {
+function RepoList({ onPull, refreshTrigger }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState({});
@@ -26,7 +26,7 @@ function RepoList({ onPull }) {
 
   useEffect(() => {
     fetchCatalog();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleSelect = (repo, tag) => {
     setSelected((prev) => ({ ...prev, [repo]: tag }));
@@ -113,7 +113,7 @@ function RepoList({ onPull }) {
   );
 }
 
-function PushForm() {
+function PushForm({ onPushComplete }) {
   const [src, setSrc] = useState("");
   const [status, setStatus] = useState("");
   const [cmd, setCmd] = useState("");
@@ -148,6 +148,7 @@ function PushForm() {
           if (data.status === 'completed') {
             setStatus("追加成功");
             setIsRunning(false);
+            if (onPushComplete) onPushComplete();
           } else if (data.status === 'error') {
             setStatus("追加失敗");
             setIsRunning(false);
@@ -274,11 +275,17 @@ function PullCmd({ repo }) {
 import { createRoot } from "react-dom/client";
 export default function App() {
   const [pullRepo, setPullRepo] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  const handlePushComplete = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
   return (
     <div style={{ fontFamily: "sans-serif", margin: "2rem" }}>
       <h1>Docker Registry UI</h1>
-      <PushForm />
-      <RepoList onPull={(repo) => setPullRepo(repo)} />
+      <PushForm onPushComplete={handlePushComplete} />
+      <RepoList onPull={(repo) => setPullRepo(repo)} refreshTrigger={refreshTrigger} />
       <PullCmd repo={pullRepo} />
     </div>
   );
