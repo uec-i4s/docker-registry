@@ -16,6 +16,14 @@
   <button id="refresh">一覧を更新</button>
   <ul id="repos"></ul>
 
+  <h2>docker push コマンド生成（レジストリに追加）</h2>
+  <div>
+    <input id="srcImage" type="text" placeholder="例: alpine:latest" />
+    <input id="dstRepo" type="text" placeholder="例: myrepo:latest" />
+    <button id="genPush">コマンド生成</button>
+    <pre id="pushCmd"></pre>
+  </div>
+
   <h2>docker pull コマンド生成</h2>
   <div>
     <input id="repoInput" type="text" placeholder="例: ubuntu:latest" />
@@ -66,11 +74,26 @@
         `docker pull ${url}/${repo}`;
     }
 
+    function genPushCmd() {
+      const src = document.getElementById('srcImage').value.trim();
+      const dst = document.getElementById('dstRepo').value.trim();
+      if (!src || !dst) {
+        document.getElementById('pushCmd').textContent = '';
+        return;
+      }
+      const url = window.location.host;
+      document.getElementById('pushCmd').textContent =
+        `docker pull ${src}\ndocker tag ${src} ${url}/${dst}\ndocker push ${url}/${dst}`;
+    }
+
     document.getElementById('refresh')
       .addEventListener('click', loadCatalog);
 
     document.getElementById('genPull')
       .addEventListener('click', genPullCmd);
+
+    document.getElementById('genPush')
+      .addEventListener('click', genPushCmd);
 
     loadCatalog();
   </script>
