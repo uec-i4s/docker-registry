@@ -7,8 +7,12 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production nginx stage
-FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80
+# Production stage: Express + React
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=build /app/build ./build
+COPY --from=build /app/server.js ./
+COPY --from=build /app/package.json ./
+RUN npm install --omit=dev
+EXPOSE 3000
+CMD ["npm", "start"]
