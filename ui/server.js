@@ -28,8 +28,8 @@ app.post("/api/push", (req, res) => {
 // 静的ファイル配信（Reactビルド成果物）
 app.use(express.static(path.join(__dirname, "build")));
 
-// SPAルーティング
-app.get("*", (req, res) => {
+// SPAルーティング（API以外）
+app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
