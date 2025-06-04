@@ -47,23 +47,14 @@ function PushForm() {
   const [status, setStatus] = useState("");
   const [cmd, setCmd] = useState("");
 
-  const genCmd = () => {
-    if (!src) {
-      setCmd("");
-      return;
-    }
-    const url = window.location.host;
-    setCmd(
-      `docker pull ${src}\ndocker tag ${src} ${url}/${src}\ndocker push ${url}/${src}`
-    );
-  };
-
   const doPush = async () => {
     if (!src) {
       setStatus("イメージ名を入力してください");
+      setCmd("");
       return;
     }
     setStatus("追加中...");
+    setCmd("");
     try {
       const res = await fetch("/api/push", {
         method: "POST",
@@ -73,11 +64,14 @@ function PushForm() {
       const data = await res.json();
       if (res.ok) {
         setStatus("追加成功");
+        setCmd(data.log || "");
       } else {
         setStatus("追加失敗: " + (data.error || "不明なエラー"));
+        setCmd(data.detail || "");
       }
     } catch {
       setStatus("API通信エラー");
+      setCmd("");
     }
   };
 
@@ -91,8 +85,7 @@ function PushForm() {
       />
       <button onClick={doPush}>レジストリに追加</button>
       <span>{status}</span>
-      <button onClick={genCmd}>コマンド生成</button>
-      <pre>{cmd}</pre>
+      <pre style={{background:"#eee",padding:"0.5em",fontSize:"0.9em",overflowX:"auto"}}>{cmd}</pre>
     </section>
   );
 }
