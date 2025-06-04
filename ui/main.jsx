@@ -56,7 +56,6 @@ function RepoList({ onPull, refreshTrigger }) {
   return (
     <section>
       <h2>レジストリ一覧</h2>
-      <button onClick={fetchCatalog}>一覧を更新</button>
       {loading ? (
         <div>読み込み中...</div>
       ) : repos.length === 0 ? (
@@ -76,14 +75,6 @@ function RepoList({ onPull, refreshTrigger }) {
                       <option key={tag} value={tag}>{tag}</option>
                     ))}
                   </select>
-                  <button
-                    onClick={() => {
-                      const tag = selected[repo] || tags[repo][0];
-                      onPull(`${repo}:${tag}`);
-                    }}
-                  >
-                    pullコマンド
-                  </button>
                   <button
                     style={{marginLeft:"0.5em"}}
                     onClick={() => {
