@@ -42,13 +42,8 @@ services:
       - registry
     networks:
       - registry-net
-    volumes:
-      - certs:/etc/nginx/certs
 
 
 networks:
   registry-net:
     driver: bridge
-
-volumes:
-  certs:
