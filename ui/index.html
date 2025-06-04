@@ -19,7 +19,8 @@
   <h2>docker push コマンド生成（レジストリに追加）</h2>
   <div>
     <input id="srcImage" type="text" placeholder="例: nginx:latest" />
-    <button id="genPush">コマンド生成</button>
+    <button id="doPush">レジストリに追加</button>
+    <span id="pushStatus"></span>
     <pre id="pushCmd"></pre>
   </div>
 
@@ -84,6 +85,30 @@
         `docker pull ${src}\ndocker tag ${src} ${url}/${src}\ndocker push ${url}/${src}`;
     }
 
+    async function doPush() {
+      const src = document.getElementById('srcImage').value.trim();
+      if (!src) {
+        document.getElementById('pushStatus').textContent = 'イメージ名を入力してください';
+        return;
+      }
+      document.getElementById('pushStatus').textContent = '追加中...';
+      try {
+        const res = await fetch('http://localhost:3001/api/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: src })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('pushStatus').textContent = '追加成功';
+        } else {
+          document.getElementById('pushStatus').textContent = '追加失敗: ' + (data.error || '不明なエラー');
+        }
+      } catch (e) {
+        document.getElementById('pushStatus').textContent = 'API通信エラー';
+      }
+    }
+
     document.getElementById('refresh')
       .addEventListener('click', loadCatalog);
 
@@ -92,6 +117,9 @@
 
     document.getElementById('genPush')
       .addEventListener('click', genPushCmd);
+
+    document.getElementById('doPush')
+      .addEventListener('click', doPush);
 
     loadCatalog();
   </script>
