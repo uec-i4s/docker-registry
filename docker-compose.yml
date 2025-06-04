@@ -1,27 +1,40 @@
 version: "3.8"
 services:
-  # Docker Registry 本体
+  # Advanced TLS + Basic auth registry (commented out)
+  # registry:
+  #   restart: always
+  #   image: registry:3
+  #   ports:
+  #     - 5000:5000
+  #   environment:
+  #     REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
+  #     REGISTRY_HTTP_TLS_KEY: /certs/domain.key
+  #     REGISTRY_AUTH: htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+  #   volumes:
+  #     - ./data:/var/lib/registry
+  #     - ./certs:/certs
+  #     - ./auth:/auth
+
+  # Simple HTTP registry + nginx reverse proxy
   registry:
-    image: registry:2            # Docker 公式 registry イメージ
-    container_name: registry     # コンテナ名を固定
-    restart: always              # 万が一落ちても自動再起動
+    image: registry:latest            # Docker 公式 registry イメージ
+    restart: always              # 自動再起動
     volumes:
       - ./data:/var/lib/registry # レジストリデータを永続化
     networks:
       - registry-net
 
-  # nginx リバースプロキシ
   nginx:
     image: nginx:stable-alpine   # nginx の軽量イメージ
-    container_name: registry-nginx
     restart: always
     ports:
-      - "80:80"                  # ホスト側の 80 番をコンテナの 80 番にマッピング
+      - "80:80"                  # ホストの 80 番をコンテナの 80 番にマッピング
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /var/log/nginx-registry:/var/log/nginx  # nginx のログを外に出したい場合
     depends_on:
-      - registry                # registry が先に起動してから nginx を起動
+      - registry                # registry 起動後に開始
     networks:
       - registry-net
 
