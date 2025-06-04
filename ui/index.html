@@ -18,8 +18,7 @@
 
   <h2>docker push コマンド生成（レジストリに追加）</h2>
   <div>
-    <input id="srcImage" type="text" placeholder="例: alpine:latest" />
-    <input id="dstRepo" type="text" placeholder="例: myrepo:latest" />
+    <input id="srcImage" type="text" placeholder="例: nginx:latest" />
     <button id="genPush">コマンド生成</button>
     <pre id="pushCmd"></pre>
   </div>
@@ -76,14 +75,13 @@
 
     function genPushCmd() {
       const src = document.getElementById('srcImage').value.trim();
-      const dst = document.getElementById('dstRepo').value.trim();
-      if (!src || !dst) {
+      if (!src) {
         document.getElementById('pushCmd').textContent = '';
         return;
       }
       const url = window.location.host;
       document.getElementById('pushCmd').textContent =
-        `docker pull ${src}\ndocker tag ${src} ${url}/${dst}\ndocker push ${url}/${dst}`;
+        `docker pull ${src}\ndocker tag ${src} ${url}/${src}\ndocker push ${url}/${src}`;
     }
 
     document.getElementById('refresh')
