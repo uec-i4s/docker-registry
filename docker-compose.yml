@@ -5,20 +5,23 @@ services:
     environment:
       REGISTRY_STORAGE: filesystem
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
-      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: "*"
-      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: "GET, OPTIONS"
-      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: "Authorization, Content-Type"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: '["*"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '["GET","OPTIONS"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '["Authorization","Content-Type"]'
     ports:
       - "5000:5000"              # ホストの 5000→コンテナの 5000
     volumes:
       - ./data:/var/lib/registry # データ永続化
 
-  ui:
-    image: nginx:stable-alpine   # シンプルUI用
+  nginx:
+    image: nginx:stable-alpine   # UIとレジストリを同一オリジンで配信
     restart: always
     ports:
-      - "8080:80"               # ホストの8080→コンテナの80
+      - "80:80"                  # ホストの 80 番をコンテナの 80 番にマッピング
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ui:/usr/share/nginx/html:ro
     depends_on:
       - registry
+    networks:
+      - registry-net
