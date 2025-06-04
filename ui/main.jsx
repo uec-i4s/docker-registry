@@ -81,7 +81,7 @@ function RepoList({ onPull, refreshTrigger }) {
                       handleSelect(repo, tag);
                     }}
                   >
-                    選択
+                    コマンド表示
                   </button>
                   <button
                     style={{marginLeft:"0.5em"}}
