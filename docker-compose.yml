@@ -1,6 +1,6 @@
 services:
   registry:
-    image: registry:2            # シンプル HTTP レジストリ
+    image: registry:latest       # シンプル HTTP レジストリ (latest タグ)
     restart: always              # 自動再起動
     environment:
       REGISTRY_STORAGE: filesystem
