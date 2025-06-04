@@ -9,3 +9,13 @@ services:
       - "5000:5000"              # ホストの 5000→コンテナの 5000
     volumes:
       - ./data:/var/lib/registry # データ永続化
+
+  ui:
+    image: nginx:stable-alpine   # シンプルUI用
+    restart: always
+    ports:
+      - "8080:80"               # ホストの8080→コンテナの80
+    volumes:
+      - ./ui:/usr/share/nginx/html:ro
+    depends_on:
+      - registry

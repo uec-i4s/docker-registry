@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Registry UI</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    #repos { list-style: none; padding: 0; }
+    #repos li { margin: 0.5rem 0; }
+    button { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Docker Registry UI</h1>
+  <button id="refresh">一覧を更新</button>
+  <ul id="repos"></ul>
+
+  <script>
+    const host = window.location.hostname;
+    const registryUrl = `http://${host}:5000`;
+    async function loadCatalog() {
+      try {
+        const res = await fetch(`${registryUrl}/v2/_catalog`);
+        const data = await res.json();
+        const ul = document.getElementById('repos');
+        ul.innerHTML = '';
+        if (data.repositories.length === 0) {
+          ul.innerHTML = '<li>リポジトリがありません</li>';
+          return;
+        }
+        data.repositories.forEach(repo => {
+          const li = document.createElement('li');
+          li.textContent = repo;
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById('repos').innerHTML =
+          '<li>一覧取得エラー</li>';
+        console.error(err);
+      }
+    }
+
+    document.getElementById('refresh')
+      .addEventListener('click', loadCatalog);
+
+    loadCatalog();
+  </script>
+</body>
+</html>
