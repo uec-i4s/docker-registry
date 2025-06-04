@@ -12,6 +12,8 @@ services:
       - "5000:5000"              # ホストの 5000→コンテナの 5000
     volumes:
       - ./data:/var/lib/registry # データ永続化
+    networks:
+      - registry-net
 
   nginx:
     image: nginx:stable-alpine   # UIとレジストリを同一オリジンで配信
@@ -25,3 +27,7 @@ services:
       - registry
     networks:
       - registry-net
+
+networks:
+  registry-net:
+    driver: bridge
