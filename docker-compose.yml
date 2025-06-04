@@ -22,9 +22,10 @@ services:
     image: registry-ui
     restart: always
     ports:
-      - "8080:3000"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - certs:/etc/nginx/certs
     depends_on:
       - registry
     networks:
@@ -34,3 +35,6 @@ services:
 networks:
   registry-net:
     driver: bridge
+
+volumes:
+  certs:
