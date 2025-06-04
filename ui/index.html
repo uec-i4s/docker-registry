@@ -34,6 +34,12 @@
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       const registryUrl = window.location.origin;
+
+      // nginxのリバースプロキシで /api/ を registry-api:3001 に転送する前提
+      function getApiUrl(path) {
+        return `/api${path}`;
+      }
+
       async function loadCatalog() {
         try {
           const res = await fetch(`/v2/_catalog`);
@@ -94,7 +100,7 @@
         }
         document.getElementById('pushStatus').textContent = '追加中...';
         try {
-          const res = await fetch('http://localhost:3001/api/push', {
+          const res = await fetch(getApiUrl('/push'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: src })
