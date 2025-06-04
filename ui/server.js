@@ -55,14 +55,22 @@ app.post("/api/push", (req, res) => {
     // SSEでリアルタイム送信
     if (sessionId && sseClients.has(sessionId)) {
       const sseRes = sseClients.get(sessionId);
-      sseRes.write(`data: ${JSON.stringify({ type: 'log', message: logEntry })}\n\n`);
+      try {
+        sseRes.write(`data: ${JSON.stringify({ type: 'log', message: logEntry })}\n\n`);
+      } catch (e) {
+        console.error('SSE write error:', e);
+      }
     }
   }
 
   function sendStatus(status) {
     if (sessionId && sseClients.has(sessionId)) {
       const sseRes = sseClients.get(sessionId);
-      sseRes.write(`data: ${JSON.stringify({ type: 'status', status })}\n\n`);
+      try {
+        sseRes.write(`data: ${JSON.stringify({ type: 'status', status })}\n\n`);
+      } catch (e) {
+        console.error('SSE status write error:', e);
+      }
     }
   }
 

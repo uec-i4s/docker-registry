@@ -140,19 +140,24 @@ function PushForm() {
     const eventSource = new EventSource(`/api/push-stream/${sessionId}`);
     
     eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'log') {
-        setLogs(prev => [...prev, data.message]);
-      } else if (data.type === 'status') {
-        if (data.status === 'completed') {
-          setStatus("追加成功");
-          setIsRunning(false);
-        } else if (data.status === 'error') {
-          setStatus("追加失敗");
-          setIsRunning(false);
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'log') {
+          setLogs(prev => [...prev, data.message]);
+        } else if (data.type === 'status') {
+          if (data.status === 'completed') {
+            setStatus("追加成功");
+            setIsRunning(false);
+          } else if (data.status === 'error') {
+            setStatus("追加失敗");
+            setIsRunning(false);
+          }
+        } else if (data.type === 'close') {
+          eventSource.close();
         }
-      } else if (data.type === 'close') {
-        eventSource.close();
+      } catch (e) {
+        console.error('SSE JSON parse error:', e, 'Data:', event.data);
+        setLogs(prev => [...prev, `[ERROR] SSE parse error: ${event.data}`]);
       }
     };
     
