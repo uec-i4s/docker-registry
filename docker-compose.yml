@@ -1,43 +1,11 @@
-version: "3.8"
 services:
-  # Advanced TLS + Basic auth registry (commented out)
-  # registry:
-  #   restart: always
-  #   image: registry:3
-  #   ports:
-  #     - 5000:5000
-  #   environment:
-  #     REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
-  #     REGISTRY_HTTP_TLS_KEY: /certs/domain.key
-  #     REGISTRY_AUTH: htpasswd
-  #     REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-  #     REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
-  #   volumes:
-  #     - ./data:/var/lib/registry
-  #     - ./certs:/certs
-  #     - ./auth:/auth
-
-  # Simple HTTP registry + nginx reverse proxy
   registry:
-    image: registry:latest            # Docker 公式 registry イメージ
+    image: registry:2            # シンプル HTTP レジストリ
     restart: always              # 自動再起動
-    volumes:
-      - ./data:/var/lib/registry # レジストリデータを永続化
-    networks:
-      - registry-net
-
-  nginx:
-    image: nginx:stable-alpine   # nginx の軽量イメージ
-    restart: always
+    environment:
+      REGISTRY_STORAGE: filesystem
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
     ports:
-      - "80:80"                  # ホストの 80 番をコンテナの 80 番にマッピング
+      - "5000:5000"              # ホストの 5000→コンテナの 5000
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - registry                # registry 起動後に開始
-    networks:
-      - registry-net
-
-networks:
-  registry-net:
-    driver: bridge
+      - ./data:/var/lib/registry # データ永続化
