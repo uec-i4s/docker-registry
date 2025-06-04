@@ -7,12 +7,13 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production stage: Express + React
-FROM node:20-alpine
+# Production stage: Node.js + Docker CLI
+FROM docker:24.0.7-cli
 WORKDIR /app
 COPY --from=build /app/build ./build
 COPY --from=build /app/server.js ./
 COPY --from=build /app/package.json ./
+RUN apk add --no-cache nodejs npm
 RUN npm install --omit=dev
 EXPOSE 3000
 CMD ["npm", "start"]
