@@ -114,6 +114,7 @@ function PullCmd({ repo }) {
   );
 }
 
+import { createRoot } from "react-dom/client";
 export default function App() {
   const [pullRepo, setPullRepo] = useState("");
   return (
@@ -125,3 +126,5 @@ export default function App() {
     </div>
   );
 }
+
+createRoot(document.getElementById("root")).render(<App />);
