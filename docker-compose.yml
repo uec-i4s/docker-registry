@@ -27,19 +27,6 @@ services:
     networks:
       - registry-net
 
-  registry-api:
-    build:
-      context: ./registry-api
-    ports:
-      - "3001:3001"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      REGISTRY_HOST: registry:5000
-    depends_on:
-      - registry
-    networks:
-      - registry-net
 
 networks:
   registry-net:
