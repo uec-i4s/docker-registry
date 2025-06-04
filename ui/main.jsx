@@ -118,6 +118,7 @@ function PushForm() {
   const [status, setStatus] = useState("");
   const [cmd, setCmd] = useState("");
   const [logs, setLogs] = useState([]);
+  const [isRunning, setIsRunning] = useState(false);
 
   const doPush = async () => {
     if (!src) {
@@ -126,29 +127,62 @@ function PushForm() {
       setLogs([]);
       return;
     }
+    
+    setIsRunning(true);
     setStatus("追加中...");
     setCmd("");
     setLogs([]);
+    
+    // セッションIDを生成
+    const sessionId = Date.now().toString();
+    
+    // SSE接続を開始
+    const eventSource = new EventSource(`/api/push-stream/${sessionId}`);
+    
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'log') {
+        setLogs(prev => [...prev, data.message]);
+      } else if (data.type === 'status') {
+        if (data.status === 'completed') {
+          setStatus("追加成功");
+          setIsRunning(false);
+          eventSource.close();
+        } else if (data.status === 'error') {
+          setStatus("追加失敗");
+          setIsRunning(false);
+          eventSource.close();
+        }
+      }
+    };
+    
+    eventSource.onerror = () => {
+      setStatus("ストリーム接続エラー");
+      setIsRunning(false);
+      eventSource.close();
+    };
+    
     try {
       const res = await fetch("/api/push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: src }),
+        body: JSON.stringify({ image: src, sessionId }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setStatus("追加成功");
-        setCmd(data.log || "");
-        setLogs(data.logs || []);
-      } else {
+      
+      if (!res.ok) {
         setStatus("追加失敗: " + (data.error || "不明なエラー"));
         setCmd(data.detail || "");
-        setLogs(data.logs || []);
+        setIsRunning(false);
+        eventSource.close();
+      } else {
+        setCmd(data.log || "");
       }
     } catch (e) {
       setStatus("API通信エラー: " + e.message);
       setCmd("");
-      setLogs([]);
+      setIsRunning(false);
+      eventSource.close();
     }
   };
 
@@ -159,13 +193,16 @@ function PushForm() {
         value={src}
         onChange={(e) => setSrc(e.target.value)}
         placeholder="例: nginx:latest"
+        disabled={isRunning}
       />
-      <button onClick={doPush}>レジストリに追加</button>
-      <span>{status}</span>
+      <button onClick={doPush} disabled={isRunning}>
+        {isRunning ? "実行中..." : "レジストリに追加"}
+      </button>
+      <span style={{marginLeft: "10px", fontWeight: "bold"}}>{status}</span>
       
       {logs.length > 0 && (
         <div>
-          <h3>実行ログ:</h3>
+          <h3>リアルタイムログ:</h3>
           <pre style={{
             background:"#f5f5f5",
             padding:"1em",
@@ -174,7 +211,8 @@ function PushForm() {
             maxHeight:"300px",
             overflowY:"auto",
             border:"1px solid #ddd",
-            borderRadius:"4px"
+            borderRadius:"4px",
+            whiteSpace: "pre-wrap"
           }}>
             {logs.join('\n')}
           </pre>

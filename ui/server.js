@@ -11,9 +11,31 @@ function log(...args) {
 const app = express();
 app.use(express.json());
 
+// SSE用のクライアント管理
+const sseClients = new Map();
+
+// SSE エンドポイント
+app.get("/api/push-stream/:sessionId", (req, res) => {
+  const sessionId = req.params.sessionId;
+  
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  sseClients.set(sessionId, res);
+
+  req.on('close', () => {
+    sseClients.delete(sessionId);
+  });
+});
+
 // API: docker pull/tag/push
 app.post("/api/push", (req, res) => {
-  const { image } = req.body;
+  const { image, sessionId } = req.body;
   if (!image) return res.status(400).json({ error: "image is required" });
   const registry = process.env.REGISTRY_HOST || "localhost:5000";
   const tagCmd = `docker tag ${image} ${registry}/${image}`;
@@ -29,14 +51,30 @@ app.post("/api/push", (req, res) => {
     const logEntry = `[${timestamp}] ${message}`;
     logs.push(logEntry);
     log(message);
+    
+    // SSEでリアルタイム送信
+    if (sessionId && sseClients.has(sessionId)) {
+      const sseRes = sseClients.get(sessionId);
+      sseRes.write(`data: ${JSON.stringify({ type: 'log', message: logEntry })}\n\n`);
+    }
   }
 
+  function sendStatus(status) {
+    if (sessionId && sseClients.has(sessionId)) {
+      const sseRes = sseClients.get(sessionId);
+      sseRes.write(`data: ${JSON.stringify({ type: 'status', status })}\n\n`);
+    }
+  }
+
+  sendStatus('starting');
   addLog(`Starting docker pull for image: ${image}`);
+  
   exec(`docker pull ${image}`, { timeout: 300000 }, (err, stdout, stderr) => {
     if (stdout) addLog(`Docker pull stdout: ${stdout}`);
     if (stderr) addLog(`Docker pull stderr: ${stderr}`);
     if (err) {
       addLog(`Docker pull error: ${err.message}`);
+      sendStatus('error');
       return res.status(500).json({
         error: "docker pull failed",
         detail: stderr,
@@ -51,6 +89,7 @@ app.post("/api/push", (req, res) => {
       if (stderr2) addLog(`Docker tag stderr: ${stderr2}`);
       if (err2) {
         addLog(`Docker tag error: ${err2.message}`);
+        sendStatus('error');
         return res.status(500).json({
           error: "docker tag failed",
           detail: stderr2,
@@ -65,6 +104,7 @@ app.post("/api/push", (req, res) => {
         if (stderr3) addLog(`Docker push stderr: ${stderr3}`);
         if (err3) {
           addLog(`Docker push error: ${err3.message}`);
+          sendStatus('error');
           return res.status(500).json({
             error: "docker push failed",
             detail: stderr3,
@@ -73,6 +113,7 @@ app.post("/api/push", (req, res) => {
           });
         }
         addLog("Docker operations completed successfully");
+        sendStatus('completed');
         res.json({
           result: "ok",
           log: stdout + stdout2 + stdout3,
