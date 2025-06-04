@@ -33,9 +33,23 @@ function RepoList({ onPull }) {
   };
 
   const handleDelete = async (repo, tag) => {
-    // レジストリAPIの仕様上、イメージ削除はmanifest digestが必要
-    // ここではUIのみ実装例（API側でdigest取得→DELETE実装が必要）
-    alert("削除機能はAPI実装が必要です（/v2/<name>/manifests/<digest> へのDELETE）");
+    if (!window.confirm(`${repo}:${tag} を本当に削除しますか？`)) return;
+    try {
+      const res = await fetch("/api/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo, tag })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("削除成功");
+        fetchCatalog();
+      } else {
+        alert("削除失敗: " + (data.error || "不明なエラー"));
+      }
+    } catch (e) {
+      alert("API通信エラー");
+    }
   };
 
   return (

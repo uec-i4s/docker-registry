@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { exec } = require("child_process");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const app = express();
 app.use(express.json());
@@ -48,6 +49,35 @@ app.use("/v2", createProxyMiddleware({
 // SPAルーティング（API以外）
 app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
+});
+
+app.delete("/api/delete", async (req, res) => {
+  const { repo, tag } = req.body;
+  if (!repo || !tag) return res.status(400).json({ error: "repo and tag required" });
+  try {
+    // 1. HEAD/GETでmanifest digest取得
+    const url = `http://registry:5000/v2/${repo}/manifests/${tag}`;
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/vnd.docker.distribution.manifest.v2+json" }
+    });
+    if (!resp.ok) {
+      return res.status(500).json({ error: "manifest fetch failed", status: resp.status });
+    }
+    const digest = resp.headers.get("docker-content-digest");
+    if (!digest) return res.status(500).json({ error: "digest not found" });
+
+    // 2. DELETEでmanifest削除
+    const delUrl = `http://registry:5000/v2/${repo}/manifests/${digest}`;
+    const delResp = await fetch(delUrl, { method: "DELETE" });
+    if (delResp.status === 202) {
+      res.json({ result: "deleted", digest });
+    } else {
+      res.status(500).json({ error: "delete failed", status: delResp.status });
+    }
+  } catch (e) {
+    res.status(500).json({ error: "delete error", detail: e.message });
+  }
 });
 
 const port = process.env.PORT || 3000;
