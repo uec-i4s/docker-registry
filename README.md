@@ -29,37 +29,23 @@ HTTPS対応のDocker Registryとウェブ管理UIを提供するシステムで�
 
 ## セットアップ
 
-### 1. サーバー側設定（Registry ホスト）
+詳細なセットアップ手順は [`docs/SETUP.md`](docs/SETUP.md) を参照してください。
+
+### クイックスタート
 
 ```bash
-# リポジトリをクローン
-git clone <repository-url>
-cd docker-registry
-
-# SSL証明書を生成（IPアドレスを適切に変更）
+# 1. SSL証明書を生成（IPアドレスを変更）
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout nginx/certs/domain.key \
   -out nginx/certs/domain.crt \
   -subj "/CN=192.168.7.46" \
   -addext "subjectAltName=IP:192.168.7.46"
 
-# サービスを起動
+# 2. サービス起動
 docker compose up -d --build
-```
 
-### 2. クライアント側設定（各Dockerクライアント）
-
-各クライアントマシンで以下を実行：
-
-```bash
-# insecure registryとして設定
-sudo tee /etc/docker/daemon.json << 'EOF'
-{
-  "insecure-registries": ["192.168.7.46:5000", "192.168.7.46:443", "192.168.7.46"]
-}
-EOF
-
-# Dockerサービス再起動
+# 3. クライアント設定（各Dockerクライアント）
+sudo cp docs/examples/client-daemon.json /etc/docker/daemon.json
 sudo systemctl restart docker
 ```
 
@@ -91,20 +77,29 @@ docker pull 192.168.7.46:5000/python:3.12-slim
 ```
 docker-registry/
 ├── docker-compose.yml          # サービス定義
-├── nginx/
+├── README.md                   # プロジェクト概要
+├── .gitignore                  # Git除外設定
+├── docs/                       # ドキュメント
+│   ├── SETUP.md               # セットアップガイド
+│   ├── TROUBLESHOOTING.md     # トラブルシューティング
+│   └── examples/              # 設定例
+│       ├── daemon.json        # サーバー用daemon.json
+│       └── client-daemon.json # クライアント用daemon.json
+├── nginx/                      # Nginx リバースプロキシ
 │   ├── Dockerfile             # Nginx コンテナ
 │   ├── nginx.conf             # Nginx 設定
 │   └── certs/                 # SSL証明書
-│       ├── domain.crt
-│       └── domain.key
-├── ui/
+│       ├── domain.crt         # SSL証明書
+│       └── domain.key         # SSL秘密鍵
+├── ui/                         # Web UI
 │   ├── Dockerfile             # UI コンテナ
 │   ├── server.js              # Express サーバー
 │   ├── main.jsx               # React アプリ
 │   ├── index.html             # HTML テンプレート
-│   └── package.json           # Node.js 依存関係
-├── data/                      # Registry データ（自動作成）
-└── README.md                  # このファイル
+│   ├── package.json           # Node.js 依存関係
+│   ├── vite.config.js         # Vite 設定
+│   └── .npmrc                 # npm 設定
+└── data/                       # Registry データ（自動作成）
 ```
 
 ## サービス詳細
@@ -128,40 +123,22 @@ docker-registry/
 
 ## トラブルシューティング
 
-### SSL証明書エラー
+問題が発生した場合は [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) を参照してください。
+
+### よくある問題
+
+- **SSL証明書エラー**: IP SANの設定とinsecure registryの設定を確認
+- **502 Bad Gateway**: サービスの起動状態を確認
+- **CORS エラー**: Registry設定とブラウザの開発者ツールを確認
+
+### ログ確認
 
 ```bash
-# 証明書を再生成（IPアドレスを変更）
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout nginx/certs/domain.key \
-  -out nginx/certs/domain.crt \
-  -subj "/CN=YOUR_IP" \
-  -addext "subjectAltName=IP:YOUR_IP"
+# 全サービスのログ
+docker compose logs
 
-# サービス再起動
-docker compose up -d --build
-```
-
-### insecure registry エラー
-
-```bash
-# daemon.json を確認
-cat /etc/docker/daemon.json
-
-# Dockerサービス再起動
-sudo systemctl restart docker
-```
-
-### サービス状態確認
-
-```bash
-# コンテナ状態確認
-docker compose ps
-
-# ログ確認
-docker compose logs nginx
-docker compose logs ui
-docker compose logs registry
+# リアルタイムログ
+docker compose logs -f
 ```
 
 ## セキュリティ注意事項

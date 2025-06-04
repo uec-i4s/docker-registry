@@ -1,0 +1,33 @@
+# Docker Registry Data
+data/
+
+# SSL Certificates (regenerate for each environment)
+nginx/certs/*.crt
+nginx/certs/*.key
+
+# Node.js
+ui/node_modules/
+ui/dist/
+ui/.env
+ui/.env.local
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
