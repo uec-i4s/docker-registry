@@ -23,21 +23,36 @@ app.post("/api/push", (req, res) => {
   req.setTimeout(600000);
   res.setTimeout(600000);
 
+  log(`Starting docker pull for image: ${image}`);
   exec(`docker pull ${image}`, { timeout: 300000 }, (err, stdout, stderr) => {
+    log(`Docker pull stdout:`, stdout);
+    log(`Docker pull stderr:`, stderr);
     if (err) {
+      log("Docker pull error:", err);
       console.error("docker pull failed:", stderr);
-      return res.status(500).json({ error: "docker pull failed", detail: stderr });
+      return res.status(500).json({ error: "docker pull failed", detail: stderr, stdout: stdout });
     }
+    
+    log(`Starting docker tag: ${tagCmd}`);
     exec(tagCmd, { timeout: 60000 }, (err2, stdout2, stderr2) => {
+      log(`Docker tag stdout:`, stdout2);
+      log(`Docker tag stderr:`, stderr2);
       if (err2) {
+        log("Docker tag error:", err2);
         console.error("docker tag failed:", stderr2);
-        return res.status(500).json({ error: "docker tag failed", detail: stderr2 });
+        return res.status(500).json({ error: "docker tag failed", detail: stderr2, stdout: stdout2 });
       }
+      
+      log(`Starting docker push: ${pushCmd}`);
       exec(pushCmd, { timeout: 300000 }, (err3, stdout3, stderr3) => {
+        log(`Docker push stdout:`, stdout3);
+        log(`Docker push stderr:`, stderr3);
         if (err3) {
+          log("Docker push error:", err3);
           console.error("docker push failed:", stderr3);
-          return res.status(500).json({ error: "docker push failed", detail: stderr3 });
+          return res.status(500).json({ error: "docker push failed", detail: stderr3, stdout: stdout3 });
         }
+        log("Docker operations completed successfully");
         res.json({ result: "ok", log: stdout + stdout2 + stdout3 });
       });
     });
