@@ -17,11 +17,10 @@
   <ul id="repos"></ul>
 
   <script>
-    const host = window.location.hostname;
-    const registryUrl = `http://${host}:5000`;
+    const registryUrl = window.location.origin;
     async function loadCatalog() {
       try {
-        const res = await fetch(`${registryUrl}/v2/_catalog`);
+        const res = await fetch(`/v2/_catalog`);
         const data = await res.json();
         const ul = document.getElementById('repos');
         ul.innerHTML = '';
