@@ -5,6 +5,9 @@ services:
     environment:
       REGISTRY_STORAGE: filesystem
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: "*"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: "GET, OPTIONS"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: "Authorization, Content-Type"
     ports:
       - "5000:5000"              # ホストの 5000→コンテナの 5000
     volumes:
