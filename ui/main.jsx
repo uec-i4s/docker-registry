@@ -30,6 +30,7 @@ function RepoList({ onPull, refreshTrigger }) {
 
   const handleSelect = (repo, tag) => {
     setSelected((prev) => ({ ...prev, [repo]: tag }));
+    onPull(repo, tag);
   };
 
   const handleDelete = async (repo, tag) => {
@@ -244,30 +245,42 @@ function PushForm({ onPushComplete }) {
   );
 }
 
-function PullCmd({ repo }) {
+function PullCmd({ repo, tag }) {
   const [cmd, setCmd] = useState("");
+  const [fromCmd, setFromCmd] = useState("");
+  
   useEffect(() => {
-    if (repo) {
-      setCmd(`docker pull ${window.location.host}/${repo}`);
+    if (repo && tag) {
+      const fullImage = `${window.location.host}/${repo}:${tag}`;
+      setCmd(`docker pull ${fullImage}`);
+      setFromCmd(`FROM ${fullImage}`);
+    } else if (repo) {
+      const fullImage = `${window.location.host}/${repo}`;
+      setCmd(`docker pull ${fullImage}`);
+      setFromCmd(`FROM ${fullImage}`);
     } else {
       setCmd("");
+      setFromCmd("");
     }
-  }, [repo]);
+  }, [repo, tag]);
+  
   return (
     <section>
-      <h2>docker pull コマンド</h2>
-      <pre>{cmd}</pre>
-      <button onClick={() => navigator.clipboard.writeText(cmd)}>コピー</button>
-      <div style={{marginTop:"0.5em",fontSize:"0.95em"}}>
-        <b>FROMで使う:</b>
-        <input
-          style={{width:"80%"}}
-          value={`${window.location.host}/${repo || ""}`}
-          readOnly
-          onFocus={e => e.target.select()}
-        />
-        <button onClick={() => navigator.clipboard.writeText(`${window.location.host}/${repo || ""}`)}>コピー</button>
-      </div>
+      <h2>Docker コマンド</h2>
+      {cmd && (
+        <div style={{marginBottom:"1em"}}>
+          <h3>Pull コマンド:</h3>
+          <pre style={{background:"#f0f0f0", padding:"0.5em", borderRadius:"4px"}}>{cmd}</pre>
+          <button onClick={() => navigator.clipboard.writeText(cmd)}>コピー</button>
+        </div>
+      )}
+      {fromCmd && (
+        <div>
+          <h3>Dockerfile FROM文:</h3>
+          <pre style={{background:"#f0f0f0", padding:"0.5em", borderRadius:"4px"}}>{fromCmd}</pre>
+          <button onClick={() => navigator.clipboard.writeText(fromCmd)}>コピー</button>
+        </div>
+      )}
     </section>
   );
 }
@@ -275,18 +288,24 @@ function PullCmd({ repo }) {
 import { createRoot } from "react-dom/client";
 export default function App() {
   const [pullRepo, setPullRepo] = useState("");
+  const [pullTag, setPullTag] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   const handlePushComplete = () => {
     setRefreshTrigger(prev => prev + 1);
   };
   
+  const handlePull = (repo, tag) => {
+    setPullRepo(repo);
+    setPullTag(tag);
+  };
+  
   return (
     <div style={{ fontFamily: "sans-serif", margin: "2rem" }}>
       <h1>Docker Registry UI</h1>
       <PushForm onPushComplete={handlePushComplete} />
-      <RepoList onPull={(repo) => setPullRepo(repo)} refreshTrigger={refreshTrigger} />
-      <PullCmd repo={pullRepo} />
+      <RepoList onPull={handlePull} refreshTrigger={refreshTrigger} />
+      <PullCmd repo={pullRepo} tag={pullTag} />
     </div>
   );
 }
