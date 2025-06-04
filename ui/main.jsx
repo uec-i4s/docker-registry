@@ -304,9 +304,16 @@ function PushForm({ onPushComplete }) {
           {logs.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Live Logs:</h3>
-              <div className="bg-gray-900 text-green-400 p-4 rounded-md max-h-80 overflow-y-auto font-mono text-sm">
+              <div
+                className="bg-gray-900 text-green-400 p-4 rounded-md max-h-80 overflow-y-auto font-mono text-sm"
+                ref={(el) => {
+                  if (el) {
+                    el.scrollTop = el.scrollHeight;
+                  }
+                }}
+              >
                 {logs.map((log, index) => (
-                  <div key={index}>{log}</div>
+                  <div key={index} className="mb-1">{log}</div>
                 ))}
               </div>
             </div>

@@ -84,13 +84,23 @@ app.post("/api/push", (req, res) => {
   pullProcess.stdout.on('data', (data) => {
     const output = data.toString();
     pullOutput += output;
-    addLog(`Docker pull: ${output.trim()}`);
+    // 各行を個別に送信
+    output.split('\n').forEach(line => {
+      if (line.trim()) {
+        addLog(`Docker pull: ${line.trim()}`);
+      }
+    });
   });
   
   pullProcess.stderr.on('data', (data) => {
     const output = data.toString();
     pullOutput += output;
-    addLog(`Docker pull stderr: ${output.trim()}`);
+    // 各行を個別に送信
+    output.split('\n').forEach(line => {
+      if (line.trim()) {
+        addLog(`Docker pull stderr: ${line.trim()}`);
+      }
+    });
   });
   
   pullProcess.on('close', (code) => {
@@ -111,13 +121,21 @@ app.post("/api/push", (req, res) => {
     tagProcess.stdout.on('data', (data) => {
       const output = data.toString();
       tagOutput += output;
-      addLog(`Docker tag: ${output.trim()}`);
+      output.split('\n').forEach(line => {
+        if (line.trim()) {
+          addLog(`Docker tag: ${line.trim()}`);
+        }
+      });
     });
     
     tagProcess.stderr.on('data', (data) => {
       const output = data.toString();
       tagOutput += output;
-      addLog(`Docker tag stderr: ${output.trim()}`);
+      output.split('\n').forEach(line => {
+        if (line.trim()) {
+          addLog(`Docker tag stderr: ${line.trim()}`);
+        }
+      });
     });
     
     tagProcess.on('close', (code2) => {
@@ -138,13 +156,21 @@ app.post("/api/push", (req, res) => {
       pushProcess.stdout.on('data', (data) => {
         const output = data.toString();
         pushOutput += output;
-        addLog(`Docker push: ${output.trim()}`);
+        output.split('\n').forEach(line => {
+          if (line.trim()) {
+            addLog(`Docker push: ${line.trim()}`);
+          }
+        });
       });
       
       pushProcess.stderr.on('data', (data) => {
         const output = data.toString();
         pushOutput += output;
-        addLog(`Docker push stderr: ${output.trim()}`);
+        output.split('\n').forEach(line => {
+          if (line.trim()) {
+            addLog(`Docker push stderr: ${line.trim()}`);
+          }
+        });
       });
       
       pushProcess.on('close', (code3) => {
