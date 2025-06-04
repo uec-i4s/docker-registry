@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "./style.css";
 
 function RepoList({ onPull, refreshTrigger }) {
   const [repos, setRepos] = useState([]);
@@ -54,62 +55,102 @@ function RepoList({ onPull, refreshTrigger }) {
   };
 
   return (
-    <section>
-      <h2>レジストリ一覧</h2>
-      {loading ? (
-        <div>読み込み中...</div>
-      ) : repos.length === 0 ? (
-        <div>リポジトリがありません</div>
-      ) : (
-        <ul>
-          {repos.map((repo) => (
-            <li key={repo}>
-              <b>{repo}</b>
-              {tags[repo] && tags[repo].length > 0 ? (
-                <>
-                  <select
-                    value={selected[repo] || tags[repo][0]}
-                    onChange={e => handleSelect(repo, e.target.value)}
-                  >
-                    {tags[repo].map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => {
-                      const tag = selected[repo] || tags[repo][0];
-                      handleSelect(repo, tag);
-                    }}
-                  >
-                    コマンド表示
-                  </button>
-                  <button
-                    style={{marginLeft:"0.5em"}}
-                    onClick={() => {
-                      const tag = selected[repo] || tags[repo][0];
-                      handleDelete(repo, tag);
-                    }}
-                  >
-                    削除
-                  </button>
-                  <button
-                    style={{marginLeft:"0.5em"}}
-                    onClick={() => {
-                      const tag = selected[repo] || tags[repo][0];
-                      navigator.clipboard.writeText(`${window.location.host}/${repo}:${tag}`);
-                    }}
-                  >
-                    コピー
-                  </button>
-                </>
-              ) : (
-                <span>タグなし</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <div className="card bg-base-100 shadow-xl mb-6">
+      <div className="card-body">
+        <h2 className="card-title text-2xl mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          レジストリ一覧
+        </h2>
+        
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <span className="loading loading-spinner loading-lg"></span>
+            <span className="ml-2">読み込み中...</span>
+          </div>
+        ) : repos.length === 0 ? (
+          <div className="alert alert-info">
+            <svg className="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>リポジトリがありません</span>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {repos.map((repo) => (
+              <div key={repo} className="card bg-base-200 shadow-sm">
+                <div className="card-body p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg">{repo}</h3>
+                    </div>
+                    
+                    {tags[repo] && tags[repo].length > 0 ? (
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                        <select 
+                          className="select select-bordered select-sm w-full sm:w-auto"
+                          value={selected[repo] || tags[repo][0]}
+                          onChange={e => handleSelect(repo, e.target.value)}
+                        >
+                          {tags[repo].map(tag => (
+                            <option key={tag} value={tag}>{tag}</option>
+                          ))}
+                        </select>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => {
+                              const tag = selected[repo] || tags[repo][0];
+                              handleSelect(repo, tag);
+                            }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            コマンド表示
+                          </button>
+                          
+                          <button
+                            className="btn btn-error btn-sm"
+                            onClick={() => {
+                              const tag = selected[repo] || tags[repo][0];
+                              handleDelete(repo, tag);
+                            }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            削除
+                          </button>
+                          
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => {
+                              const tag = selected[repo] || tags[repo][0];
+                              const cmd = `docker pull ${window.location.host}/${repo}:${tag}`;
+                              navigator.clipboard.writeText(cmd);
+                            }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            コピー
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="badge badge-warning">タグなし</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -193,54 +234,79 @@ function PushForm({ onPushComplete }) {
   };
 
   return (
-    <section>
-      <h2>docker push（レジストリに追加）</h2>
-      <input
-        value={src}
-        onChange={(e) => setSrc(e.target.value)}
-        placeholder="例: nginx:latest"
-        disabled={isRunning}
-      />
-      <button onClick={doPush} disabled={isRunning}>
-        {isRunning ? "実行中..." : "レジストリに追加"}
-      </button>
-      <span style={{marginLeft: "10px", fontWeight: "bold"}}>{status}</span>
-      
-      {logs.length > 0 && (
-        <div>
-          <h3>リアルタイムログ:</h3>
-          <pre style={{
-            background:"#f5f5f5",
-            padding:"1em",
-            fontSize:"0.8em",
-            overflowX:"auto",
-            maxHeight:"300px",
-            overflowY:"auto",
-            border:"1px solid #ddd",
-            borderRadius:"4px",
-            whiteSpace: "pre-wrap"
-          }}>
-            {logs.join('\n')}
-          </pre>
+    <div className="card bg-base-100 shadow-xl mb-6">
+      <div className="card-body">
+        <h2 className="card-title text-2xl mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Docker Push（レジストリに追加）
+        </h2>
+        
+        <div className="form-control w-full">
+          <label className="label">
+            <span className="label-text">イメージ名</span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="例: nginx:latest"
+              className="input input-bordered flex-1"
+              value={src}
+              onChange={(e) => setSrc(e.target.value)}
+              disabled={isRunning}
+            />
+            <button 
+              className={`btn ${isRunning ? 'btn-disabled' : 'btn-primary'}`}
+              onClick={doPush} 
+              disabled={isRunning}
+            >
+              {isRunning ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  実行中...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  レジストリに追加
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      )}
-      
-      {cmd && (
-        <div>
-          <h3>Docker出力:</h3>
-          <pre style={{
-            background:"#eee",
-            padding:"0.5em",
-            fontSize:"0.9em",
-            overflowX:"auto",
-            maxHeight:"200px",
-            overflowY:"auto"
-          }}>
-            {cmd}
-          </pre>
-        </div>
-      )}
-    </section>
+        
+        {status && (
+          <div className={`alert ${status.includes('成功') ? 'alert-success' : status.includes('失敗') || status.includes('エラー') ? 'alert-error' : 'alert-info'} mt-4`}>
+            <span>{status}</span>
+          </div>
+        )}
+        
+        {logs.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">リアルタイムログ:</h3>
+            <div className="mockup-code max-h-80 overflow-y-auto">
+              <pre className="text-sm">
+                {logs.join('\n')}
+              </pre>
+            </div>
+          </div>
+        )}
+        
+        {cmd && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Docker出力:</h3>
+            <div className="mockup-code max-h-60 overflow-y-auto">
+              <pre className="text-sm">
+                {cmd}
+              </pre>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -264,23 +330,61 @@ function PullCmd({ repo, tag }) {
   }, [repo, tag]);
   
   return (
-    <section>
-      <h2>Docker コマンド</h2>
-      {cmd && (
-        <div style={{marginBottom:"1em"}}>
-          <h3>Pull コマンド:</h3>
-          <pre style={{background:"#f0f0f0", padding:"0.5em", borderRadius:"4px"}}>{cmd}</pre>
-          <button onClick={() => navigator.clipboard.writeText(cmd)}>コピー</button>
-        </div>
-      )}
-      {fromCmd && (
-        <div>
-          <h3>Dockerfile FROM文:</h3>
-          <pre style={{background:"#f0f0f0", padding:"0.5em", borderRadius:"4px"}}>{fromCmd}</pre>
-          <button onClick={() => navigator.clipboard.writeText(fromCmd)}>コピー</button>
-        </div>
-      )}
-    </section>
+    <div className="card bg-base-100 shadow-xl">
+      <div className="card-body">
+        <h2 className="card-title text-2xl mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Docker コマンド
+        </h2>
+        
+        {cmd && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-2">Pull コマンド:</h3>
+            <div className="mockup-code">
+              <pre data-prefix="$"><code>{cmd}</code></pre>
+            </div>
+            <button 
+              className="btn btn-outline btn-sm mt-2"
+              onClick={() => navigator.clipboard.writeText(cmd)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              コピー
+            </button>
+          </div>
+        )}
+        
+        {fromCmd && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Dockerfile FROM文:</h3>
+            <div className="mockup-code">
+              <pre><code>{fromCmd}</code></pre>
+            </div>
+            <button 
+              className="btn btn-outline btn-sm mt-2"
+              onClick={() => navigator.clipboard.writeText(fromCmd)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              コピー
+            </button>
+          </div>
+        )}
+        
+        {!cmd && !fromCmd && (
+          <div className="alert alert-info">
+            <svg className="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>レジストリからイメージを選択してください</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -300,11 +404,23 @@ export default function App() {
   };
   
   return (
-    <div style={{ fontFamily: "sans-serif", margin: "2rem" }}>
-      <h1>Docker Registry UI</h1>
-      <PushForm onPushComplete={handlePushComplete} />
-      <RepoList onPull={handlePull} refreshTrigger={refreshTrigger} />
-      <PullCmd repo={pullRepo} tag={pullTag} />
+    <div className="min-h-screen bg-base-200">
+      <div className="navbar bg-base-100 shadow-lg">
+        <div className="flex-1">
+          <h1 className="text-xl font-bold">
+            <svg className="w-8 h-8 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Docker Registry UI
+          </h1>
+        </div>
+      </div>
+      
+      <div className="container mx-auto p-6">
+        <PushForm onPushComplete={handlePushComplete} />
+        <RepoList onPull={handlePull} refreshTrigger={refreshTrigger} />
+        <PullCmd repo={pullRepo} tag={pullTag} />
+      </div>
     </div>
   );
 }
