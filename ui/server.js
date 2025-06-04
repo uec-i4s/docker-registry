@@ -69,49 +69,87 @@ app.post("/api/push", (req, res) => {
   sendStatus('starting');
   addLog(`Starting docker pull for image: ${image}`);
   
-  exec(`docker pull ${image}`, { timeout: 300000 }, (err, stdout, stderr) => {
-    if (stdout) addLog(`Docker pull stdout: ${stdout}`);
-    if (stderr) addLog(`Docker pull stderr: ${stderr}`);
-    if (err) {
-      addLog(`Docker pull error: ${err.message}`);
+  // Docker pullをspawnで実行してリアルタイム出力を取得
+  const pullProcess = spawn('docker', ['pull', image]);
+  let pullOutput = '';
+  
+  pullProcess.stdout.on('data', (data) => {
+    const output = data.toString();
+    pullOutput += output;
+    addLog(`Docker pull: ${output.trim()}`);
+  });
+  
+  pullProcess.stderr.on('data', (data) => {
+    const output = data.toString();
+    pullOutput += output;
+    addLog(`Docker pull stderr: ${output.trim()}`);
+  });
+  
+  pullProcess.on('close', (code) => {
+    if (code !== 0) {
+      addLog(`Docker pull failed with code: ${code}`);
       sendStatus('error');
       return res.status(500).json({
         error: "docker pull failed",
-        detail: stderr,
-        stdout: stdout,
+        detail: pullOutput,
         logs: logs
       });
     }
     
     addLog(`Starting docker tag: ${tagCmd}`);
-    exec(tagCmd, { timeout: 60000 }, (err2, stdout2, stderr2) => {
-      if (stdout2) addLog(`Docker tag stdout: ${stdout2}`);
-      if (stderr2) addLog(`Docker tag stderr: ${stderr2}`);
-      if (err2) {
-        addLog(`Docker tag error: ${err2.message}`);
+    const tagProcess = spawn('docker', ['tag', image, `${registry}/${image}`]);
+    let tagOutput = '';
+    
+    tagProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      tagOutput += output;
+      addLog(`Docker tag: ${output.trim()}`);
+    });
+    
+    tagProcess.stderr.on('data', (data) => {
+      const output = data.toString();
+      tagOutput += output;
+      addLog(`Docker tag stderr: ${output.trim()}`);
+    });
+    
+    tagProcess.on('close', (code2) => {
+      if (code2 !== 0) {
+        addLog(`Docker tag failed with code: ${code2}`);
         sendStatus('error');
         return res.status(500).json({
           error: "docker tag failed",
-          detail: stderr2,
-          stdout: stdout2,
+          detail: tagOutput,
           logs: logs
         });
       }
       
       addLog(`Starting docker push: ${pushCmd}`);
-      exec(pushCmd, { timeout: 300000 }, (err3, stdout3, stderr3) => {
-        if (stdout3) addLog(`Docker push stdout: ${stdout3}`);
-        if (stderr3) addLog(`Docker push stderr: ${stderr3}`);
-        if (err3) {
-          addLog(`Docker push error: ${err3.message}`);
+      const pushProcess = spawn('docker', ['push', `${registry}/${image}`]);
+      let pushOutput = '';
+      
+      pushProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        pushOutput += output;
+        addLog(`Docker push: ${output.trim()}`);
+      });
+      
+      pushProcess.stderr.on('data', (data) => {
+        const output = data.toString();
+        pushOutput += output;
+        addLog(`Docker push stderr: ${output.trim()}`);
+      });
+      
+      pushProcess.on('close', (code3) => {
+        if (code3 !== 0) {
+          addLog(`Docker push failed with code: ${code3}`);
           sendStatus('error');
           return res.status(500).json({
             error: "docker push failed",
-            detail: stderr3,
-            stdout: stdout3,
+            detail: pushOutput,
             logs: logs
           });
         }
+        
         addLog("Docker operations completed successfully");
         sendStatus('completed');
         
@@ -125,7 +163,7 @@ app.post("/api/push", (req, res) => {
         
         res.json({
           result: "ok",
-          log: stdout + stdout2 + stdout3,
+          log: pullOutput + tagOutput + pushOutput,
           logs: logs
         });
       });
