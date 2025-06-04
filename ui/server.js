@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 // ログ出力を強化
