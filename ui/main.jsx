@@ -147,12 +147,12 @@ function PushForm() {
         if (data.status === 'completed') {
           setStatus("追加成功");
           setIsRunning(false);
-          eventSource.close();
         } else if (data.status === 'error') {
           setStatus("追加失敗");
           setIsRunning(false);
-          eventSource.close();
         }
+      } else if (data.type === 'close') {
+        eventSource.close();
       }
     };
     

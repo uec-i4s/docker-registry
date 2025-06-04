@@ -114,6 +114,15 @@ app.post("/api/push", (req, res) => {
         }
         addLog("Docker operations completed successfully");
         sendStatus('completed');
+        
+        // SSE接続を閉じる
+        if (sessionId && sseClients.has(sessionId)) {
+          const sseRes = sseClients.get(sessionId);
+          sseRes.write(`data: ${JSON.stringify({ type: 'close' })}\n\n`);
+          sseRes.end();
+          sseClients.delete(sessionId);
+        }
+        
         res.json({
           result: "ok",
           log: stdout + stdout2 + stdout3,
