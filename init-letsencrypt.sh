@@ -77,3 +77,12 @@ echo
 
 echo "### Reloading nginx ..."
 docker-compose exec nginx nginx -s reload
+
+echo "### Restarting registry with SSL certificates ..."
+docker-compose restart registry
+
+echo "### SSL setup complete!"
+echo "Registry is now accessible via:"
+echo "  - HTTPS (via nginx): https://$domains/"
+echo "  - HTTPS (direct): https://$domains:5443/v2/"
+echo "  - HTTP (internal): http://$domains:5000/v2/"

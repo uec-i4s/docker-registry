@@ -9,10 +9,22 @@ services:
       REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '["GET","OPTIONS"]'
       REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '["Authorization","Content-Type"]'
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      # HTTPS設定（Let's Encrypt証明書使用）
+      REGISTRY_HTTP_ADDR: "0.0.0.0:443"
+      REGISTRY_HTTP_TLS_CERTIFICATE: "/certs/fullchain.pem"
+      REGISTRY_HTTP_TLS_KEY: "/certs/privkey.pem"
+      # 基本認証設定（必要に応じてコメントアウトを解除）
+      # REGISTRY_AUTH: htpasswd
+      # REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      # REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
     ports:
-      - "5000:5000"
+      - "5000:5000"  # HTTP（内部通信用）
+      - "5443:443"   # HTTPS（外部アクセス用）
     volumes:
       - ./data:/var/lib/registry
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/conf/live/your-domain.com:/certs:ro
+      # - ./auth:/auth:ro  # 認証を有効にする場合はコメントアウトを解除
     networks:
       - registry-net
 
