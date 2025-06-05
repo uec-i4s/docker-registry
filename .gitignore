@@ -5,6 +5,9 @@ data/
 nginx/certs/*.crt
 nginx/certs/*.key
 
+# Let's Encrypt certificates and configuration
+certbot/
+
 # Node.js
 ui/node_modules/
 ui/dist/

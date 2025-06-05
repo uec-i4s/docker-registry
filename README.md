@@ -31,20 +31,44 @@ HTTPS対応のDocker Registryとウェブ管理UIを提供するシステムで�
 
 詳細なセットアップ手順は [`docs/SETUP.md`](docs/SETUP.md) を参照してください。
 
-### クイックスタート
+### Let's Encrypt SSL証明書（推奨）
+
+本番環境では無料のLet's Encrypt証明書を使用することを推奨します。
+詳細は [`docs/LETSENCRYPT.md`](docs/LETSENCRYPT.md) を参照してください。
+
+```bash
+# 1. 設定ファイルを編集
+# init-letsencrypt.sh でドメイン名とメールアドレスを設定
+# nginx/nginx.conf でドメイン名を設定
+
+# 2. Let's Encrypt証明書を取得
+./init-letsencrypt.sh
+
+# 3. サービス起動（証明書取得後は自動で起動済み）
+```
+
+### クイックスタート（自己署名証明書）
+
+開発環境やテスト用途では自己署名証明書を使用できます：
 
 ```bash
 # 1. SSL証明書を生成（IPアドレスを変更）
+mkdir -p nginx/certs
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout nginx/certs/domain.key \
   -out nginx/certs/domain.crt \
   -subj "/CN=192.168.7.46" \
   -addext "subjectAltName=IP:192.168.7.46"
 
-# 2. サービス起動
+# 2. nginx設定を自己署名証明書用に変更
+# nginx/nginx.conf の証明書パスを以下に変更：
+# ssl_certificate     /etc/nginx/certs/domain.crt;
+# ssl_certificate_key /etc/nginx/certs/domain.key;
+
+# 3. サービス起動
 docker compose up -d --build
 
-# 3. クライアント設定（各Dockerクライアント）
+# 4. クライアント設定（各Dockerクライアント）
 sudo cp docs/examples/client-daemon.json /etc/docker/daemon.json
 sudo systemctl restart docker
 ```
