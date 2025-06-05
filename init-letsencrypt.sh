@@ -2,10 +2,17 @@
 
 # Let's Encrypt証明書の初期設定スクリプト
 
-if ! [ -x "$(command -v docker-compose)" ]; then
-  echo 'Error: docker-compose is not installed.' >&2
+# Docker Composeコマンドの確認
+if [ -x "$(command -v docker-compose)" ]; then
+  DOCKER_COMPOSE="docker-compose"
+elif [ -x "$(command -v docker)" ] && docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE="docker compose"
+else
+  echo 'Error: docker-compose or docker compose is not available.' >&2
   exit 1
 fi
+
+echo "Using Docker Compose command: $DOCKER_COMPOSE"
 
 domains=(your-domain.com)
 rsa_key_size=4096
