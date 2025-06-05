@@ -8,6 +8,9 @@ nginx/certs/*.key
 # Let's Encrypt certificates and configuration
 certbot/
 
+# Authentication files
+auth/
+
 # Node.js
 ui/node_modules/
 ui/dist/

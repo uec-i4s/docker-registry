@@ -34,6 +34,15 @@ ssl_certificate     /etc/letsencrypt/live/your-domain.com/fullchain.pem;
 ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
 ```
 
+#### docker-compose.yml の編集
+
+`docker-compose.yml` の以下の行を実際のドメイン名に変更：
+
+```yaml
+volumes:
+  - ./certbot/conf/live/your-domain.com:/certs:ro
+```
+
 ### 2. 証明書の初回取得
 
 ```bash
@@ -49,6 +58,37 @@ ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
 4. ダミー証明書を削除
 5. Let's Encryptから実際の証明書を取得
 6. nginxを再読み込み
+7. registryサービスを再起動（SSL証明書を適用）
+
+## アクセス方法
+
+証明書設定完了後、以下の方法でRegistryにアクセスできます：
+
+### Web UI（推奨）
+```
+https://your-domain.com/
+```
+
+### Docker Registry API
+
+#### nginxプロキシ経由（推奨）
+```bash
+# イメージのpull
+docker pull your-domain.com/image:tag
+
+# イメージのpush
+docker tag local-image:tag your-domain.com/image:tag
+docker push your-domain.com/image:tag
+```
+
+#### Registry直接アクセス
+```bash
+# HTTPS（ポート5443）
+docker pull your-domain.com:5443/image:tag
+
+# HTTP（ポート5000、内部通信用）
+docker pull your-domain.com:5000/image:tag
+```
 
 ### 3. 自動更新の確認
 
