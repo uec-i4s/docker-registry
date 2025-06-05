@@ -12,35 +12,49 @@
 
 ### 1. 設定ファイルの編集
 
-#### init-letsencrypt.sh の編集
+**重要**: 証明書取得前に必ず実際のドメイン名に変更してください！
+
+#### 自動設定（推奨）
 
 ```bash
-# ドメイン名を設定
-domains=(your-domain.com)
+# ドメイン設定ヘルパースクリプトを実行
+chmod +x configure-domain.sh
+./configure-domain.sh
+```
+
+#### 手動設定
+
+以下のファイルを手動で編集する場合：
+
+**init-letsencrypt.sh の編集**
+
+```bash
+# ドメイン名を設定（your-domain.com を実際のドメインに変更）
+domains=(registry.example.com)
 
 # メールアドレスを設定（Let's Encryptからの通知用）
-email="your-email@example.com"
+email="admin@example.com"
 
 # テスト環境の場合は1に設定（本番環境では0のまま）
 staging=0
 ```
 
-#### nginx.conf の編集
+**nginx/nginx.conf の編集**
 
 `nginx/nginx.conf` の以下の行を実際のドメイン名に変更：
 
 ```nginx
-ssl_certificate     /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+ssl_certificate     /etc/letsencrypt/live/registry.example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/registry.example.com/privkey.pem;
 ```
 
-#### docker-compose.yml の編集
+**docker-compose.yml の編集**
 
 `docker-compose.yml` の以下の行を実際のドメイン名に変更：
 
 ```yaml
 volumes:
-  - ./certbot/conf/live/your-domain.com:/certs:ro
+  - ./certbot/conf/live/registry.example.com:/certs:ro
 ```
 
 ### 2. 証明書の初回取得
@@ -112,17 +126,61 @@ docker-compose exec nginx nginx -s reload
 
 ### よくある問題
 
-1. **ドメインの検証に失敗する**
-   - DNSの設定を確認
+1. **ドメインの検証に失敗する（unauthorized エラー）**
+   - **最重要**: `init-letsencrypt.sh`と`nginx/nginx.conf`、`docker-compose.yml`の`your-domain.com`を実際のドメイン名に変更
+   - DNSの設定を確認（ドメインがサーバーのIPアドレスを指しているか）
    - ポート80がファイアウォールで開放されているか確認
+   - nginxが正しく起動しているか確認: `docker compose logs nginx`
 
-2. **証明書の取得に失敗する**
+2. **webroot認証の失敗**
+   - `.well-known/acme-challenge/`パスが正しく設定されているか確認
+   - nginxコンテナが`/var/www/certbot`にアクセスできるか確認
+   - 手動テスト: `echo "test" > ./certbot/www/test.txt` してから `curl http://your-domain.com/.well-known/acme-challenge/test.txt`
+
+3. **証明書の取得に失敗する**
    - `staging=1` に設定してテスト環境で試す
-   - Let's Encryptのレート制限に引っかかっていないか確認
+   - Let's Encryptのレート制限に引っかかっていないか確認（同一ドメインで1週間に5回まで）
 
-3. **nginxが起動しない**
+4. **nginxが起動しない**
    - 証明書ファイルのパスが正しいか確認
-   - nginx設定ファイルの構文エラーをチェック
+   - nginx設定ファイルの構文エラーをチェック: `docker compose exec nginx nginx -t`
+
+### 設定確認チェックリスト
+
+証明書取得前に以下を確認してください：
+
+1. **ドメイン設定**
+   ```bash
+   # 以下のファイルで your-domain.com を実際のドメインに変更
+   - init-letsencrypt.sh (domains配列)
+   - nginx/nginx.conf (ssl_certificate行)
+   - docker-compose.yml (volumes行)
+   ```
+
+2. **DNS確認**
+   ```bash
+   # ドメインがサーバーIPを指しているか確認
+   nslookup your-domain.com
+   dig your-domain.com
+   ```
+
+3. **ポート確認**
+   ```bash
+   # ポート80, 443が開放されているか確認
+   sudo netstat -tlnp | grep :80
+   sudo netstat -tlnp | grep :443
+   ```
+
+4. **nginx設定テスト**
+   ```bash
+   # nginx設定の構文チェック
+   docker compose exec nginx nginx -t
+   
+   # webrootパスのテスト
+   mkdir -p ./certbot/www/.well-known/acme-challenge/
+   echo "test" > ./certbot/www/.well-known/acme-challenge/test.txt
+   curl http://your-domain.com/.well-known/acme-challenge/test.txt
+   ```
 
 ### ログの確認
 
