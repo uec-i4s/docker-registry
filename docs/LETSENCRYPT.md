@@ -96,11 +96,17 @@ docker pull your-domain.com:5000/image:tag
 
 ```bash
 # 証明書の手動更新
+docker compose exec certbot certbot renew
+# または
 docker-compose exec certbot certbot renew
 
 # nginxの再読み込み
+docker compose exec nginx nginx -s reload
+# または
 docker-compose exec nginx nginx -s reload
 ```
+
+**注意**: 環境によって`docker compose`（スペース区切り）または`docker-compose`（ハイフン区切り）を使用してください。
 
 ## トラブルシューティング
 
@@ -122,9 +128,13 @@ docker-compose exec nginx nginx -s reload
 
 ```bash
 # nginxのログ
+docker compose logs nginx
+# または
 docker-compose logs nginx
 
 # certbotのログ
+docker compose logs certbot
+# または
 docker-compose logs certbot
 ```
 
@@ -145,4 +155,7 @@ Let's Encryptの証明書は90日間有効です。自動更新が設定され�
 
 ```bash
 # 証明書の詳細情報を表示
+docker compose exec certbot certbot certificates
+# または
 docker-compose exec certbot certbot certificates
+```
